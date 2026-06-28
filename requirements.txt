@@ -1,0 +1,38 @@
+# FastAPI & Server
+fastapi==0.111.0
+uvicorn[standard]==0.29.0
+python-multipart==0.0.9
+aiofiles==23.2.1
+
+# LangChain
+langchain==0.2.5
+langchain-community==0.2.5
+langchain-core==0.2.10
+
+# Vector Store
+faiss-cpu==1.8.0
+
+# Embeddings
+sentence-transformers==3.0.0
+
+# PDF Processing
+PyMuPDF==1.24.5
+
+# Speech
+faster-whisper==1.0.2
+
+# LLM
+ollama==0.2.1
+openai==1.35.3
+
+# Pydantic & Config
+pydantic==2.7.4
+pydantic-settings==2.3.4
+python-dotenv==1.0.1
+
+# Utilities
+numpy==1.26.4
+httpx==0.27.0
+loguru==0.7.2
+tenacity==8.4.1
+tiktoken==0.7.0

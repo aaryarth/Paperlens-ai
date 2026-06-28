@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.pyc
+
+# Virtual environment
+venv/
+.venv/
+
+# Environment
+.env
+
+# Keep folders, ignore contents
+audio/*
+!audio/.gitkeep
+
+uploads/*
+!uploads/.gitkeep
+
+logs/*
+!logs/.gitkeep
+
+data/*
+!data/.gitkeep
+
+# IDE
+.vscode/
+.idea/

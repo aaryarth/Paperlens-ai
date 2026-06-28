@@ -1,0 +1,66 @@
+version: "3.9"
+
+services:
+
+  paperlens:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: paperlens-ai
+    ports:
+      - "8000:8000"
+    environment:
+      - LLM_PROVIDER=${LLM_PROVIDER:-ollama}
+      - OLLAMA_BASE_URL=http://ollama:11434
+      - OLLAMA_MODEL=${OLLAMA_MODEL:-llama3}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - OPENAI_MODEL=${OPENAI_MODEL:-gpt-4o}
+      - EMBEDDING_MODEL=${EMBEDDING_MODEL:-all-MiniLM-L6-v2}
+      - CHUNK_SIZE=${CHUNK_SIZE:-800}
+      - CHUNK_OVERLAP=${CHUNK_OVERLAP:-150}
+      - FAISS_INDEX_PATH=/app/data/faiss_index
+      - UPLOAD_DIR=/app/uploads
+      - AUDIO_DIR=/app/audio
+      - MAX_FILE_SIZE_MB=${MAX_FILE_SIZE_MB:-50}
+      - WHISPER_MODEL=${WHISPER_MODEL:-base}
+      - TOP_K_RETRIEVAL=${TOP_K_RETRIEVAL:-5}
+      - APP_ENV=production
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - CORS_ORIGINS=${CORS_ORIGINS:-*}
+    volumes:
+      - uploads:/app/uploads
+      - audio:/app/audio
+      - faiss_data:/app/data
+      - logs:/app/logs
+    depends_on:
+      ollama:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: paperlens-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_models:/root/.ollama
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+volumes:
+  uploads:
+  audio:
+  faiss_data:
+  ollama_models:
+  logs:

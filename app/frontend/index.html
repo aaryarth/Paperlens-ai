@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PaperLens AI – Research Assistant</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<!-- ─── Navigation ──────────────────────────────────────────────────────── -->
+<nav class="nav">
+  <a class="nav-brand" href="#">
+    <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect width="32" height="32" rx="8" fill="url(#grad)"/>
+      <path d="M8 10h16M8 16h10M8 22h13" stroke="white" stroke-width="2" stroke-linecap="round"/>
+      <circle cx="24" cy="20" r="5" stroke="white" stroke-width="2"/>
+      <path d="M27.5 23.5L30 26" stroke="white" stroke-width="2" stroke-linecap="round"/>
+      <defs>
+        <linearGradient id="grad" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
+          <stop stop-color="#6c63ff"/>
+          <stop offset="1" stop-color="#a78bfa"/>
+        </linearGradient>
+      </defs>
+    </svg>
+    PaperLens AI
+  </a>
+
+  <div class="nav-tabs">
+    <button class="nav-tab active" data-tab="chat">💬 Chat</button>
+    <button class="nav-tab" data-tab="analysis">🔬 Analysis</button>
+    <button class="nav-tab" data-tab="dashboard">📊 Dashboard</button>
+  </div>
+
+  <div class="nav-status">
+    <div class="status-dot" id="statusDot"></div>
+    <span id="statusLabel">Connecting…</span>
+  </div>
+</nav>
+
+<!-- ─── Layout ──────────────────────────────────────────────────────────── -->
+<div class="layout">
+
+  <!-- ─── Sidebar ──────────────────────────────────────────────────────── -->
+  <aside class="sidebar">
+    <div class="sidebar-header">📚 Documents</div>
+
+    <div class="upload-zone" id="uploadZone">
+      <div class="upload-icon">📂</div>
+      <p>Drag & drop PDFs here<br>or <span>click to browse</span></p>
+    </div>
+    <input type="file" id="fileInput" accept=".pdf" multiple>
+
+    <div class="upload-progress" id="uploadProgress">
+      <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+      <div class="progress-text" id="progressText"></div>
+    </div>
+
+    <div class="doc-list" id="docList">
+      <div class="doc-empty">📄 No documents yet.<br>Upload PDFs to get started.</div>
+    </div>
+  </aside>
+
+  <!-- ─── Main ─────────────────────────────────────────────────────────── -->
+  <main class="main">
+
+    <!-- ══ CHAT TAB ══════════════════════════════════════════════════════ -->
+    <div class="tab-panel active" data-panel="chat">
+      <div class="chat-container">
+
+        <div class="chat-messages" id="chatMessages">
+          <!-- Welcome message -->
+          <div class="message assistant">
+            <div class="message-avatar">🔬</div>
+            <div class="message-bubble">
+              <strong>Welcome to PaperLens AI!</strong><br><br>
+              I'm your voice-enabled research assistant. Here's what I can do:<br><br>
+              📄 <strong>Upload PDFs</strong> using the sidebar<br>
+              💬 <strong>Ask questions</strong> about your papers<br>
+              🎙 <strong>Use voice</strong> by clicking the mic button<br>
+              🔬 <strong>Analyze</strong> with the Analysis tab<br><br>
+              Start by uploading research papers to begin!
+            </div>
+          </div>
+        </div>
+
+        <div class="chat-input-area">
+          <!-- Voice recording indicator -->
+          <div class="voice-recording-bar" id="voiceBar">
+            <div class="recording-waves">
+              <div class="wave-bar"></div>
+              <div class="wave-bar"></div>
+              <div class="wave-bar"></div>
+              <div class="wave-bar"></div>
+              <div class="wave-bar"></div>
+            </div>
+            <span>Recording… click mic to stop</span>
+          </div>
+
+          <div class="chat-input-row">
+            <textarea
+              class="chat-input"
+              id="chatInput"
+              placeholder="Ask a question about your research papers… (Enter to send)"
+              rows="1"
+            ></textarea>
+            <button class="btn-voice" id="btnVoice" title="Voice query">🎙</button>
+            <button class="btn-send" id="btnSend" title="Send">➤</button>
+          </div>
+          <div class="chat-hint">
+            💡 Tip: Use <kbd>Shift+Enter</kbd> for new lines · Answers include source citations · Voice queries use Faster-Whisper STT
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ ANALYSIS TAB ═════════════════════════════════════════════════ -->
+    <div class="tab-panel" data-panel="analysis">
+      <div class="analysis-panel">
+
+        <!-- Ask (scoped to analysis tab) -->
+        <div class="analysis-form" style="margin-bottom:32px;">
+          <h2 style="font-size:1rem;color:var(--accent2);margin-bottom:4px;">💡 Multi-Paper Q&A</h2>
+          <div class="form-group">
+            <label class="form-label">Question</label>
+            <input type="text" class="form-input" id="analysisQuestion"
+              placeholder="e.g. What regularization techniques were compared across the papers?">
+          </div>
+          <button class="btn-primary" id="btnAskAnalysis">Ask Question</button>
+          <div id="askResult"></div>
+        </div>
+
+        <!-- Compare -->
+        <div class="analysis-form" style="margin-bottom:32px;">
+          <h2 style="font-size:1rem;color:var(--accent2);margin-bottom:4px;">⚖️ Cross-Paper Comparison</h2>
+          <div class="form-group">
+            <label class="form-label">Select Documents (≥ 2)</label>
+            <div class="doc-checkboxes" id="compareDocList">
+              <span style="color:var(--text3);font-size:0.8rem;">No documents uploaded.</span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Comparison Aspect</label>
+            <select class="form-select" id="compareAspect">
+              <option value="all">All Aspects</option>
+              <option value="methodology">Methodology</option>
+              <option value="datasets">Datasets</option>
+              <option value="experiments">Experiments</option>
+              <option value="results">Results</option>
+              <option value="conclusions">Conclusions</option>
+            </select>
+          </div>
+          <button class="btn-primary" id="btnCompare">Compare Papers</button>
+          <div id="compareResult"></div>
+        </div>
+
+        <!-- Summary -->
+        <div class="analysis-form" style="margin-bottom:32px;">
+          <h2 style="font-size:1rem;color:var(--accent2);margin-bottom:4px;">📝 Paper Summarization</h2>
+          <div class="form-group">
+            <label class="form-label">Select Document</label>
+            <select class="form-select" id="summaryDocSelect">
+              <option value="">No documents</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Summary Type</label>
+            <select class="form-select" id="summaryType">
+              <option value="executive">Executive Summary</option>
+              <option value="detailed">Detailed Summary</option>
+              <option value="key_findings">Key Findings</option>
+              <option value="contributions">Key Contributions</option>
+              <option value="limitations">Limitations Analysis</option>
+            </select>
+          </div>
+          <button class="btn-primary" id="btnSummary">Generate Summary</button>
+          <div id="summaryResult"></div>
+        </div>
+
+        <!-- Research Gaps -->
+        <div class="analysis-form" style="margin-bottom:32px;">
+          <h2 style="font-size:1rem;color:var(--accent2);margin-bottom:4px;">🔍 Research Gap Analysis</h2>
+          <div class="form-group">
+            <label class="form-label">Documents (leave unchecked for all)</label>
+            <div class="doc-checkboxes" id="gapDocList">
+              <span style="color:var(--text3);font-size:0.8rem;">No documents uploaded.</span>
+            </div>
+          </div>
+          <button class="btn-primary" id="btnGaps">Analyze Gaps</button>
+          <div id="gapResult"></div>
+        </div>
+
+        <!-- Literature Review -->
+        <div class="analysis-form" style="margin-bottom:48px;">
+          <h2 style="font-size:1rem;color:var(--accent2);margin-bottom:4px;">📖 Literature Review Generator</h2>
+          <div class="form-group">
+            <label class="form-label">Documents (leave unchecked for all)</label>
+            <div class="doc-checkboxes" id="litDocList">
+              <span style="color:var(--text3);font-size:0.8rem;">No documents uploaded.</span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Focus Topic (optional)</label>
+            <input type="text" class="form-input" id="litFocus"
+              placeholder="e.g. attention mechanisms in NLP">
+          </div>
+          <button class="btn-primary" id="btnLitReview">Generate Literature Review</button>
+          <div id="litResult"></div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ══ DASHBOARD TAB ════════════════════════════════════════════════ -->
+    <div class="tab-panel" data-panel="dashboard">
+      <div class="dashboard-panel">
+
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+          <h2 style="font-size:1rem;color:var(--accent2);">📊 Research Dashboard</h2>
+          <button class="btn-primary" id="btnRefreshDash" style="padding:6px 14px;font-size:0.8rem;">Refresh</button>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-value" id="statDocs">–</div>
+            <div class="stat-label">Documents</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="statChunks">–</div>
+            <div class="stat-label">Chunks</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="statEmbed">–</div>
+            <div class="stat-label">Embeddings</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="statModel" style="font-size:0.8rem;line-height:1.4;padding-top:6px;">–</div>
+            <div class="stat-label">LLM</div>
+          </div>
+        </div>
+
+        <!-- History -->
+        <div class="section-title">🕐 Query History</div>
+        <div class="history-list" id="queryHistoryList">
+          <div class="doc-empty">No queries yet.</div>
+        </div>
+
+        <div class="section-title">📝 Summary History</div>
+        <div class="history-list" id="summaryHistoryList">
+          <div class="doc-empty">No summaries yet.</div>
+        </div>
+
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ─── Toast Container ──────────────────────────────────────────────────── -->
+<div id="toastContainer"></div>
+
+<script src="/static/app.js"></script>
+</body>
+</html>
