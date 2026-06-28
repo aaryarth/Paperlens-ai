@@ -22,30 +22,7 @@
 ---
 
 ## Architecture
-
-```
-Browser (HTML / JS / Voice UI)
-          │
-          ▼
-     FastAPI backend
-    ┌─────┴──────────────────────┐
-    │                            │
-Document layer              Voice layer
-PyMuPDF + chunking       Faster-Whisper STT
-    │
-    ▼
-Sentence Transformers
- all-MiniLM-L6-v2
-    │
-    ▼
- FAISS vector store
- (IndexFlatIP, cosine)
-    │
-    ▼
-   LLM (RAG)
-Ollama llama3 / OpenAI GPT-4o
-```
-
+![Architecture](doc/arch.png)
 ---
 
 ## Quick start
